@@ -1,0 +1,22 @@
+# Godot-specific .gitignore
+.import/
+.export/
+.export-debug/
+.cache/
+
+# Godot project files
+*.import
+*.tmp
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# APKs and builds
+*.apk
+/build/
+
+# User-specific files
+*.user
+*.cfg
