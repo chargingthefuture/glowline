@@ -2,6 +2,9 @@
 
 [node name="Main" type="Node2D"]
 
+script = ExtResource( 3 )
+[ext_resource path="res://scripts/main.gd" type="Script" id=3]
+
 [node name="Background" type="ColorRect" parent="."]
 color = Color(0.05, 0.05, 0.12)
 rect_min_size = Vector2(720, 1280)
@@ -14,5 +17,21 @@ script = ExtResource( 1 )
 width = 12.0
 default_color = Color(0.0, 1.0, 0.8)
 points = [Vector2(100, 1200), Vector2(360, 1000), Vector2(600, 800), Vector2(360, 400), Vector2(120, 200)]
+
+[node name="HazardSpawner" parent="." instance=ExtResource( 4 )]
+
+[ext_resource path="res://scenes/HazardSpawner.tscn" type="PackedScene" id=4]
+
+[node name="DialogueLayer" parent="." instance=ExtResource( 2 )]
+
+[node name="GlitchOverlay" parent="." instance=ExtResource( 5 )]
+
+[node name="MusicManager" parent="." instance=ExtResource( 6 )]
+
+[ext_resource path="res://scenes/MusicManager.tscn" type="PackedScene" id=6]
+
+[ext_resource path="res://scenes/GlitchOverlay.tscn" type="PackedScene" id=5]
+
+[ext_resource path="res://scenes/DialogueLayer.tscn" type="PackedScene" id=2]
 
 [ext_resource path="res://scripts/player.gd" type="Script" id=1]
