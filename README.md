@@ -1,22 +1,30 @@
-# Glowline – Neon Arcade Racer (Godot, Android)
+# Glowline – Neon Arcade Racer
 
-Glowline is a relaxing neon arcade racer. Glide, boost, and drift through glowing circuits with a synthwave vibe. Built in Godot for Android.
+Glowline is a relaxing neon arcade racer. Glide, boost, and drift through glowing circuits with a synthwave vibe.
+
+There are two implementations in this repo:
+
+- **`web/` — Offline PWA (recommended for iPhone).** A self-contained HTML5 +
+  Canvas port you can install to your iOS Home Screen and play **fully offline,
+  with no App Store and no Apple Developer fee.** See [`web/README.md`](web/README.md).
+- **Godot prototype (`scenes/`, `scripts/`).** The original Godot project,
+  originally targeted at Android.
+
+## Play on iPhone (no Apple tax)
+
+Host the `web/` folder over HTTPS (a free GitHub Pages workflow is included —
+see [`web/README.md`](web/README.md)), open it in Safari, then
+**Share → Add to Home Screen**. It runs full-screen and works offline.
+
+To try it locally:
+
+```sh
+cd web && python3 -m http.server 8000   # then open http://localhost:8000/
+```
 
 ## Project Structure
-- /scenes
-- /scripts
-- /assets
-- /ui
-- /music
-
-## How to Run/Edit
-- Open the project in Godot Web Editor (https://editor.godotengine.org/)
-- Import the project folder
-
-## How to Export for Android
-- In Godot Web Editor: Project > Export > Add Android
-- Follow Godot’s Android export guide
-- Download the APK and test on your device
+- `/web` – the offline PWA (the playable app)
+- `/scenes`, `/scripts` – the original Godot prototype
 
 ## Controls & Gameplay
 - Touch left/right to steer
