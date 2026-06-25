@@ -10,6 +10,12 @@ There are two implementations in this repo:
 - **Godot prototype (`scenes/`, `scripts/`).** The original Godot project,
   originally targeted at Android.
 
+## Screenshots
+
+| Title | Race | Choice |
+|---|---|---|
+| ![Title screen](web/screenshots/01-title.png) | ![Race level](web/screenshots/03-race.png) | ![Branching choice](web/screenshots/04-choice.png) |
+
 ## Play on iPhone (no Apple tax)
 
 Host the `web/` folder over HTTPS (a free GitHub Pages workflow is included —

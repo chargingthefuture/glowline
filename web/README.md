@@ -8,6 +8,16 @@ auto-accelerate), the branching Broker / The Pulse dialogue, the four-act story,
 falling hazards, the glitch overlay, and synthwave audio (generated procedurally
 with the Web Audio API, so there are no media files to download).
 
+## Screenshots
+
+| Title | Dialogue | Race |
+|---|---|---|
+| ![Title screen](screenshots/01-title.png) | ![Dialogue](screenshots/02-dialogue.png) | ![Race level](screenshots/03-race.png) |
+
+| Branching choice | Ending |
+|---|---|
+| ![Branching choice](screenshots/04-choice.png) | ![Ending](screenshots/05-end.png) |
+
 ## Play it / install on iPhone (no Apple tax)
 
 1. Host the `web/` folder over **HTTPS** (service workers require it). The
