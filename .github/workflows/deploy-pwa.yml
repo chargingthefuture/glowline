@@ -1,0 +1,39 @@
+name: Deploy Glowline PWA
+
+# Publishes the offline PWA in web/ to GitHub Pages.
+# After the first successful run, enable Pages in repo Settings → Pages →
+# "Build and deployment" → Source: GitHub Actions. The site URL is then shown
+# there (https://<user>.github.io/glowline/). Open it in iOS Safari and use
+# Share → "Add to Home Screen" to install it offline — no App Store, no fee.
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/deploy-pwa.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Upload web/ as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4
