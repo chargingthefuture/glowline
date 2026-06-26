@@ -41,6 +41,7 @@ resize();
 function frame(t) {
   const dt = Math.min(0.05, (t - lastT) / 1000 || 0);
   lastT = t;
+  pollGamepad();
   bg.update(dt);
   if (activeRace) activeRace.update(dt);
 
@@ -58,7 +59,12 @@ requestAnimationFrame(frame);
 
 // ---- input routing (only active during a race) ----
 let steer = 0, keyL = false, keyR = false;
-function applySteer() { steer = (keyR ? 1 : 0) - (keyL ? 1 : 0); if (activeRace) activeRace.setSteer(steer); }
+// Keyboard takes priority; when no key is held, the controller's steer applies.
+function applySteer() {
+  const key = (keyR ? 1 : 0) - (keyL ? 1 : 0);
+  steer = key !== 0 ? key : padSteer;
+  if (activeRace) activeRace.setSteer(steer);
+}
 
 window.addEventListener("keydown", (e) => {
   if (e.code === "ArrowLeft" || e.code === "KeyA") { keyL = true; applySteer(); }
@@ -79,6 +85,56 @@ canvas.addEventListener("pointerdown", (e) => pointSteer(e.clientX));
 canvas.addEventListener("pointermove", (e) => { if (e.pressure > 0 || e.buttons) pointSteer(e.clientX); });
 canvas.addEventListener("pointerup", () => { if (activeRace) { steer = 0; applySteer(); } });
 canvas.addEventListener("pointercancel", () => { if (activeRace) { steer = 0; applySteer(); } });
+
+// ---- gamepad ----
+// The Gamepad API is poll-based, so we read it once per frame from pollGamepad()
+// (called inside the RAF loop). Steering comes from the left stick X-axis or the
+// D-pad; the A button starts/replays. Polling only does work when a pad is
+// attached, so there is no cost otherwise. iOS Safari exposes this for paired
+// Bluetooth / MFi controllers; there is no on-screen virtual pad.
+let padConnected = false;
+let padSteer = 0;          // -1 / 0 / 1 from the controller, separate from keys
+let padActionPrev = false; // edge-detect the A button so a hold fires once
+const STICK_DEADZONE = 0.35;
+
+window.addEventListener("gamepadconnected", () => { padConnected = true; });
+window.addEventListener("gamepaddisconnected", () => {
+  // If no pads remain, stop letting a stale stick value hold the steer.
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  padConnected = Array.from(pads).some(Boolean);
+  if (!padConnected && activeRace && padSteer !== 0) { padSteer = 0; applySteer(); }
+});
+
+function firstPad() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const p of pads) if (p) return p;
+  return null;
+}
+
+function pollGamepad() {
+  if (!padConnected) return;
+  const p = firstPad();
+  if (!p) return;
+
+  // Steering: left stick X (axis 0) with a deadzone, falling back to the D-pad
+  // (buttons 14 = left, 15 = right in the Standard Gamepad mapping).
+  const ax = p.axes[0] || 0;
+  const dLeft = p.buttons[14] && p.buttons[14].pressed;
+  const dRight = p.buttons[15] && p.buttons[15].pressed;
+  let s = 0;
+  if (dLeft) s = -1; else if (dRight) s = 1;
+  else if (ax <= -STICK_DEADZONE) s = -1; else if (ax >= STICK_DEADZONE) s = 1;
+  if (s !== padSteer) { padSteer = s; applySteer(); }
+
+  // A button (index 0): start on the title screen, replay on the end screen.
+  // Edge-detected so holding it does not retrigger.
+  const action = !!(p.buttons[0] && p.buttons[0].pressed);
+  if (action && !padActionPrev) {
+    if (titleScreen.classList.contains("visible")) begin();
+    else if (endScreen.classList.contains("visible")) replay();
+  }
+  padActionPrev = action;
+}
 
 // ---- toast ----
 let toastTimer = null;
@@ -145,10 +201,11 @@ function begin() {
 }
 startBtn.addEventListener("click", begin);
 
-replayBtn.addEventListener("click", () => {
+function replay() {
   endScreen.classList.remove("visible");
   runStory();
-});
+}
+replayBtn.addEventListener("click", replay);
 
 muteBtn.addEventListener("click", () => {
   const m = audio.toggleMute();
