@@ -31,6 +31,7 @@ function tone(freq, t, dur, type, peak, dest) {
 
 function tick() {
   if (!ctx) return;
+  clearTimeout(stepTimer); // keep a single sequencer loop even if re-kicked
   const t = now() + 0.06;
   const beat = 0.5; // seconds per arpeggio step
   // arpeggio
@@ -44,7 +45,18 @@ function tick() {
   stepTimer = setTimeout(tick, beat * 1000);
 }
 
+// iOS treats Web Audio as "ambient" by default, so the hardware ringer/mute
+// switch silences it and an installed PWA can come up with no sound at all.
+// Asking for the "playback" audio session (iOS 16.4+) makes the game play
+// through the switch. Guarded because it is not available everywhere.
+function claimPlaybackAudio() {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+  } catch (_) { /* not supported — fall back to default behavior */ }
+}
+
 export function start() {
+  claimPlaybackAudio();
   if (started) {
     if (ctx.state === "suspended") ctx.resume();
     return;
@@ -59,7 +71,9 @@ export function start() {
   musicGain.gain.value = muted ? 0 : 0.7;
   musicGain.connect(master);
   started = true;
-  if (ctx.state === "suspended") ctx.resume();
+  // resume() can settle a beat after the gesture on iOS; (re)kick the
+  // sequencer once it actually runs so the music is not stuck silent.
+  if (ctx.state === "suspended") ctx.resume().then(tick).catch(() => {});
   tick();
 }
 

@@ -1,6 +1,6 @@
 // Glowline service worker — precache everything for full offline play.
 // Bump CACHE when any asset changes so clients pull the new version.
-const CACHE = "glowline-v3";
+const CACHE = "glowline-v4";
 
 const ASSETS = [
   "./",
