@@ -1,12 +1,14 @@
 # Glowline — Web App (Offline PWA)
 
-A self-contained HTML5 + Canvas port of Glowline that installs to your iPhone
-Home Screen and runs **fully offline** — no App Store, no Apple Developer fee.
+A self-contained HTML5 + Canvas game that installs to your iPhone Home Screen
+and runs **fully offline after the first load** — no App Store, no Apple
+Developer fee.
 
-It faithfully reproduces the Godot prototype: the neon courier ship (steer +
-auto-accelerate), the branching Broker / The Pulse dialogue, the four-act story,
-falling hazards, the glitch overlay, and synthwave audio (generated procedurally
-with the Web Audio API, so there are no media files to download).
+It ports the Godot prototype into a static web game: the neon courier ship
+(steer + auto-accelerate), the branching Broker / The Pulse dialogue, race
+levels, falling hazards, maze corridors, the glitch overlay, and synthwave audio
+generated with the Web Audio API. There are no remote fonts, remote scripts,
+media downloads, analytics, or online game services.
 
 ## Screenshots
 
@@ -26,7 +28,7 @@ with the Web Audio API, so there are no media files to download).
 2. On your iPhone, open the site in **Safari**.
 3. Tap **Share → Add to Home Screen**.
 4. Launch it from the Home Screen icon. It runs full-screen and works offline
-   once loaded (the service worker precaches everything).
+   once loaded. The service worker precaches every runtime file the game needs.
 
 > iOS only allows "Add to Home Screen" from Safari, and PWAs must be served over
 > HTTPS. `localhost` also counts as a secure context for local testing.
@@ -54,6 +56,8 @@ race — handy for previewing the whole story quickly.
 
 Hazards never end the run — a hit just nudges your progress back, in keeping
 with the game's supportive tone. Gather the glowing data motes for feedback.
+Maze levels add moving wall gates; steer through the open spaces to keep your
+progress.
 
 ## Files
 
@@ -78,6 +82,13 @@ URL appears there, e.g. `https://<user>.github.io/glowline/`.
 
 Any static host (Netlify, Cloudflare Pages, Vercel) works too — just serve the
 `web/` directory.
+
+## Offline-only rules
+
+- Keep gameplay local to the device: no sign-in, servers, leaderboards,
+  analytics, remote assets, or online saves.
+- Add new levels and options as static files or local browser state only.
+- If a runtime file changes, update `sw.js` so installed copies refresh.
 
 ## Updating
 

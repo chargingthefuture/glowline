@@ -3,7 +3,7 @@
 //
 //   { say: [..lines..] }                       -> dialogue lines
 //   { say: (branch) => [..lines..] }           -> dialogue that depends on the choice
-//   { race: { name, subtitle, seconds, mode }} -> a steer-and-dodge level
+//   { race: { name, subtitle, seconds, mode, maze? }} -> a steer-and-dodge level
 //   { choice: { prompt, options: [...] } }     -> a branching decision
 //
 // Tone follows STORY.md: supportive, hopeful, never oppressive. The game is
@@ -65,6 +65,38 @@ export const STORY = [
     "GL-1N3: I have to try.",
   ] },
   { race: { name: "Act 4 — Collapse", subtitle: "Carry the patch to the Heart", seconds: 26, mode: "intense" } },
+  { say: [
+    "The Pulse: The Heart opened a narrow route. Follow the clear spaces.",
+    "GL-1N3: I see it. A path inside the noise.",
+  ] },
+  { race: {
+    name: "Act 5 — Memory Maze",
+    subtitle: "Thread the safe openings",
+    seconds: 24,
+    mode: "maze",
+    maze: {
+      gap: 225,
+      wallHeight: 76,
+      interval: 1.35,
+      gaps: [360, 230, 500, 290, 455, 180, 390, 540, 320, 210, 470, 350],
+    },
+  } },
+  { say: [
+    "Broker: The route is changing, but it is not closed.",
+    "GL-1N3: Then we keep moving.",
+  ] },
+  { race: {
+    name: "Act 6 — Heart Labyrinth",
+    subtitle: "Navigate the final corridor",
+    seconds: 28,
+    mode: "maze",
+    maze: {
+      gap: 190,
+      wallHeight: 84,
+      interval: 1.12,
+      gaps: [320, 520, 410, 210, 165, 455, 555, 340, 185, 270, 505, 395, 225, 360],
+    },
+  } },
   { say: (branch) => branch === "broker"
       ? ["GL-1N3 delivers the patch, and Broker steadies.",
          "Broker (rebooting): GL-1N3...? What happened?",

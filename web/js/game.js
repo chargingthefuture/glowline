@@ -141,6 +141,7 @@ const MODES = {
   hazard:  { hazard: 1.1,  fall: 280, motes: 1.6, color: "#ff5a7a" },
   fast:    { hazard: 0.8,  fall: 380, motes: 1.8, color: "#ff7a3a" },
   intense: { hazard: 0.55, fall: 460, motes: 2.0, color: "#ff3a5a" },
+  maze:    { hazard: 0.95, fall: 340, motes: 1.5, color: "#ff5a7a" },
 };
 
 export class Race {
@@ -152,12 +153,25 @@ export class Race {
     this.steer = 0;
     this.hazards = [];
     this.motes = [];
+    this.walls = [];
     this.progress = 0;
     this.hazardTimer = 0;
     this.moteTimer = 0;
+    this.wallTimer = 0.4;
+    this.wallIndex = 0;
     this.invuln = 0;
     this.done = false;
     this._resolve = null;
+    this.maze = cfg.maze ? {
+      gap: cfg.maze.gap ?? 210,
+      wallHeight: cfg.maze.wallHeight ?? 78,
+      interval: cfg.maze.interval ?? 1.25,
+      minX: cfg.maze.minX ?? 150,
+      maxX: cfg.maze.maxX ?? (VW - 150),
+      shift: cfg.maze.shift ?? 150,
+      gaps: cfg.maze.gaps ?? null,
+      lastGap: cfg.maze.startGap ?? (VW / 2),
+    } : null;
   }
 
   start() { return new Promise((res) => { this._resolve = res; }); }
@@ -168,6 +182,25 @@ export class Race {
   }
   _spawnMote() {
     this.motes.push({ x: rnd(70, VW - 70), y: -30, r: 12, hue: Math.random() < 0.5 ? "#00ffcc" : "#7a5aff" });
+  }
+  _spawnWall() {
+    if (!this.maze) return;
+    let gapCenter;
+    if (this.maze.gaps && this.maze.gaps.length) {
+      gapCenter = this.maze.gaps[this.wallIndex % this.maze.gaps.length];
+    } else {
+      gapCenter = this.maze.lastGap + rnd(-this.maze.shift, this.maze.shift);
+    }
+    gapCenter = clamp(gapCenter, this.maze.minX, this.maze.maxX);
+    this.maze.lastGap = gapCenter;
+    this.wallIndex += 1;
+    this.walls.push({
+      y: -this.maze.wallHeight,
+      h: this.maze.wallHeight,
+      gapCenter,
+      gap: this.maze.gap,
+      pulse: rnd(0, 6.28),
+    });
   }
 
   update(dt) {
@@ -190,6 +223,13 @@ export class Race {
       this.hazardTimer -= dt;
       if (this.hazardTimer <= 0) { this._spawnHazard(); this.hazardTimer = this.m.hazard * rnd(0.7, 1.3); }
     }
+    if (this.maze) {
+      this.wallTimer -= dt;
+      if (this.wallTimer <= 0) {
+        this._spawnWall();
+        this.wallTimer = this.maze.interval * rnd(0.9, 1.12);
+      }
+    }
     this.moteTimer -= dt;
     if (this.moteTimer <= 0) { this._spawnMote(); this.moteTimer = this.m.motes * rnd(0.7, 1.3); }
 
@@ -203,6 +243,20 @@ export class Race {
       }
     }
     this.hazards = this.hazards.filter((h) => h.y < VH + 60 && !h.dead);
+
+    // maze walls: moving gates with a single safe opening
+    for (const w of this.walls) {
+      w.y += this.m.fall * dt;
+      w.pulse += dt * 3;
+      if (this.invuln <= 0) {
+        const gapLeft = w.gapCenter - w.gap / 2;
+        const gapRight = w.gapCenter + w.gap / 2;
+        const overlapsY = SHIP_Y + 24 > w.y && SHIP_Y - 24 < w.y + w.h;
+        const insideGap = this.ship.x - 22 > gapLeft && this.ship.x + 22 < gapRight;
+        if (overlapsY && !insideGap) this._hit(w);
+      }
+    }
+    this.walls = this.walls.filter((w) => w.y < VH + 90 && !w.dead);
 
     // move + collect motes
     for (const mt of this.motes) {
@@ -218,6 +272,7 @@ export class Race {
     this.invuln = 1.3;
     this.progress = Math.max(0, this.progress - 0.2);
     this.hazards.forEach((x) => { if (Math.abs(x.y - 980) < 240) x.dead = true; });
+    this.walls.forEach((x) => { if (Math.abs(x.y - 980) < 220) x.dead = true; });
     audio.error();
     if (this.hooks.bg) this.hooks.bg.glitch(1.2);
     if (this.hooks.onHit) this.hooks.onHit();
@@ -240,6 +295,28 @@ export class Race {
       ctx.beginPath();
       ctx.moveTo(0, -h.r); ctx.lineTo(h.r, 0); ctx.lineTo(0, h.r); ctx.lineTo(-h.r, 0);
       ctx.closePath(); ctx.fill();
+      ctx.restore();
+      ctx.shadowBlur = 0;
+    }
+    // maze walls
+    for (const w of this.walls) {
+      const gapLeft = w.gapCenter - w.gap / 2;
+      const gapRight = w.gapCenter + w.gap / 2;
+      const glow = 0.55 + Math.sin(w.pulse) * 0.2;
+      ctx.save();
+      ctx.shadowColor = "#7a5aff";
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = `rgba(122, 90, 255, ${0.58 + glow * 0.18})`;
+      ctx.fillRect(0, w.y, gapLeft, w.h);
+      ctx.fillRect(gapRight, w.y, VW - gapRight, w.h);
+      ctx.strokeStyle = `rgba(0, 255, 204, ${0.45 + glow * 0.25})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(gapLeft, w.y);
+      ctx.lineTo(gapLeft, w.y + w.h);
+      ctx.moveTo(gapRight, w.y);
+      ctx.lineTo(gapRight, w.y + w.h);
+      ctx.stroke();
       ctx.restore();
       ctx.shadowBlur = 0;
     }
