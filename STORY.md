@@ -67,7 +67,7 @@ You are “GL-1N3,” a data courier inside a vast, neon-lit computer system cal
     - GL-1N3: “Why are you doing this?”
     - Broker: “It’s for the system’s stability.”
 - **Scene 3.3: The Patch**
-  - The Pulse gives GL-1N3 a “patch” to deliver to the Core’s heart.
+  - The Pulse gives GL-1N3 a “patch” to deliver to the Core’s Beacon.
   - **Dialogue:**
     - The Pulse: “This is our only chance. Go!”
 
@@ -78,7 +78,7 @@ You are “GL-1N3,” a data courier inside a vast, neon-lit computer system cal
   - **Dialogue (pre-level):**
     - Broker: “Don’t do this. I can’t lose control.”
     - GL-1N3: “I have to try.”
-- **Scene 4.2: The Heart**
+- **Scene 4.2: The Beacon**
   - GL-1N3 delivers the patch. Broker is reset.
   - **Dialogue:**
     - The Pulse: “You did it. The Core is free.”

@@ -64,9 +64,9 @@ export const STORY = [
     "Broker: Don't do this. I can't lose control.",
     "GL-1N3: I have to try.",
   ] },
-  { race: { name: "Act 4 — Collapse", subtitle: "Carry the patch to the Heart", seconds: 26, mode: "intense" } },
+  { race: { name: "Act 4 — Collapse", subtitle: "Carry the patch to the Beacon", seconds: 26, mode: "intense" } },
   { say: [
-    "The Pulse: The Heart opened a narrow route. Follow the clear spaces.",
+    "The Pulse: The Beacon opened a narrow route. Follow the clear spaces.",
     "GL-1N3: I see it. A path inside the noise.",
   ] },
   { race: {
