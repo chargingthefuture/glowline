@@ -86,7 +86,7 @@ export const STORY = [
     "GL-1N3: Then we keep moving.",
   ] },
   { race: {
-    name: "Act 6 — Heart Labyrinth",
+    name: "Act 6 — Last Corridor",
     subtitle: "Navigate the final corridor",
     seconds: 28,
     mode: "maze",
