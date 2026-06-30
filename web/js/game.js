@@ -141,7 +141,7 @@ const MODES = {
   hazard:  { hazard: 1.1,  fall: 280, motes: 1.6, color: "#ff5a7a" },
   fast:    { hazard: 0.8,  fall: 380, motes: 1.8, color: "#ff7a3a" },
   intense: { hazard: 0.55, fall: 460, motes: 2.0, color: "#ff3a5a" },
-  maze:    { hazard: 0.95, fall: 340, motes: 1.5, color: "#ff5a7a" },
+  maze:    { hazard: 1.35, fall: 320, motes: 1.5, color: "#ff5a7a" },
 };
 
 export class Race {
@@ -160,6 +160,7 @@ export class Race {
     this.wallTimer = 0.4;
     this.wallIndex = 0;
     this.invuln = 0;
+    this.setback = cfg.setback ?? 0.2;
     this.done = false;
     this._resolve = null;
     this.maze = cfg.maze ? {
@@ -169,6 +170,7 @@ export class Race {
       minX: cfg.maze.minX ?? 150,
       maxX: cfg.maze.maxX ?? (VW - 150),
       shift: cfg.maze.shift ?? 150,
+      spawnUntil: cfg.maze.spawnUntil ?? 0.92,
       gaps: cfg.maze.gaps ?? null,
       lastGap: cfg.maze.startGap ?? (VW / 2),
     } : null;
@@ -223,7 +225,7 @@ export class Race {
       this.hazardTimer -= dt;
       if (this.hazardTimer <= 0) { this._spawnHazard(); this.hazardTimer = this.m.hazard * rnd(0.7, 1.3); }
     }
-    if (this.maze) {
+    if (this.maze && this.progress < this.maze.spawnUntil) {
       this.wallTimer -= dt;
       if (this.wallTimer <= 0) {
         this._spawnWall();
@@ -270,7 +272,7 @@ export class Race {
   _hit(h) {
     h.dead = true;
     this.invuln = 1.3;
-    this.progress = Math.max(0, this.progress - 0.2);
+    this.progress = Math.max(0, this.progress - this.setback);
     this.hazards.forEach((x) => { if (Math.abs(x.y - 980) < 240) x.dead = true; });
     this.walls.forEach((x) => { if (Math.abs(x.y - 980) < 220) x.dead = true; });
     audio.error();
