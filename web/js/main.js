@@ -124,14 +124,22 @@ function pollGamepad() {
   let s = 0;
   if (dLeft) s = -1; else if (dRight) s = 1;
   else if (ax <= -STICK_DEADZONE) s = -1; else if (ax >= STICK_DEADZONE) s = 1;
-  if (s !== padSteer) { padSteer = s; applySteer(); }
+  if (s !== padSteer) {
+    padSteer = s;
+    // A left/right press also moves the highlight on a choice prompt (edge only,
+    // so one flick moves one step). moveChoice() is a no-op unless a prompt is up.
+    if (s !== 0) dlg.moveChoice(s);
+    applySteer();
+  }
 
-  // A button (index 0): start on the title screen, replay on the end screen.
-  // Edge-detected so holding it does not retrigger.
+  // A button (index 0): advance the story. It starts on the title screen,
+  // replays on the end screen, and otherwise advances a dialogue line or picks
+  // the highlighted choice. Edge-detected so holding it does not retrigger.
   const action = !!(p.buttons[0] && p.buttons[0].pressed);
   if (action && !padActionPrev) {
     if (titleScreen.classList.contains("visible")) begin();
     else if (endScreen.classList.contains("visible")) replay();
+    else dlg.advance();
   }
   padActionPrev = action;
 }
