@@ -141,7 +141,7 @@ const MODES = {
   hazard:  { hazard: 1.1,  fall: 280, motes: 1.6, color: "#ff5a7a" },
   fast:    { hazard: 0.8,  fall: 380, motes: 1.8, color: "#ff7a3a" },
   intense: { hazard: 0.55, fall: 460, motes: 2.0, color: "#ff3a5a" },
-  maze:    { hazard: 0.95, fall: 340, motes: 1.5, color: "#ff5a7a" },
+  maze:    { hazard: 1.35, fall: 320, motes: 1.5, color: "#ff5a7a" },
 };
 
 export class Race {
@@ -160,6 +160,8 @@ export class Race {
     this.wallTimer = 0.4;
     this.wallIndex = 0;
     this.invuln = 0;
+    this.setback = cfg.setback ?? 0.2;
+    this.moteBoost = cfg.moteBoost ?? 0.03;
     this.done = false;
     this._resolve = null;
     this.maze = cfg.maze ? {
@@ -169,7 +171,11 @@ export class Race {
       minX: cfg.maze.minX ?? 150,
       maxX: cfg.maze.maxX ?? (VW - 150),
       shift: cfg.maze.shift ?? 150,
+      spawnUntil: cfg.maze.spawnUntil ?? 0.92,
+      boostAmount: cfg.maze.boostAmount ?? 0,
+      boostRange: cfg.maze.boostRange ?? 34,
       gaps: cfg.maze.gaps ?? null,
+      boostEdges: cfg.maze.boostEdges ?? null,
       lastGap: cfg.maze.startGap ?? (VW / 2),
     } : null;
   }
@@ -199,8 +205,17 @@ export class Race {
       h: this.maze.wallHeight,
       gapCenter,
       gap: this.maze.gap,
+      boostEdge: this.maze.boostEdges ? this.maze.boostEdges[(this.wallIndex - 1) % this.maze.boostEdges.length] : null,
+      boosted: false,
       pulse: rnd(0, 6.28),
     });
+  }
+
+  _addProgress(amount) {
+    this.progress = clamp(this.progress + amount, 0, 1);
+    if (this.hooks.onProgress) this.hooks.onProgress(this.progress);
+    if (this.progress >= 1) { this.done = true; this._resolve("win"); return true; }
+    return false;
   }
 
   update(dt) {
@@ -212,9 +227,7 @@ export class Race {
     this.ship.tilt += (this.steer - this.ship.tilt) * Math.min(1, dt * 8);
 
     // progress
-    this.progress = clamp(this.progress + dt / this.cfg.seconds, 0, 1);
-    if (this.hooks.onProgress) this.hooks.onProgress(this.progress);
-    if (this.progress >= 1) { this.done = true; this._resolve("win"); return; }
+    if (this._addProgress(dt / this.cfg.seconds)) return;
 
     if (this.invuln > 0) this.invuln -= dt;
 
@@ -223,7 +236,7 @@ export class Race {
       this.hazardTimer -= dt;
       if (this.hazardTimer <= 0) { this._spawnHazard(); this.hazardTimer = this.m.hazard * rnd(0.7, 1.3); }
     }
-    if (this.maze) {
+    if (this.maze && this.progress < this.maze.spawnUntil) {
       this.wallTimer -= dt;
       if (this.wallTimer <= 0) {
         this._spawnWall();
@@ -254,6 +267,14 @@ export class Race {
         const overlapsY = SHIP_Y + 24 > w.y && SHIP_Y - 24 < w.y + w.h;
         const insideGap = this.ship.x - 22 > gapLeft && this.ship.x + 22 < gapRight;
         if (overlapsY && !insideGap) this._hit(w);
+        if (overlapsY && insideGap && w.boostEdge && !w.boosted && this.maze.boostAmount > 0) {
+          const edgeX = w.boostEdge === "left" ? gapLeft : gapRight;
+          if (Math.abs(this.ship.x - edgeX) <= this.maze.boostRange) {
+            w.boosted = true;
+            audio.blip();
+            if (this._addProgress(this.maze.boostAmount)) return;
+          }
+        }
       }
     }
     this.walls = this.walls.filter((w) => w.y < VH + 90 && !w.dead);
@@ -262,7 +283,11 @@ export class Race {
     for (const mt of this.motes) {
       mt.y += (this.m.fall * 0.7) * dt;
       const dx = mt.x - this.ship.x, dy = mt.y - SHIP_Y;
-      if (dx * dx + dy * dy < (mt.r + 26) ** 2) { mt.got = true; audio.blip(); }
+      if (dx * dx + dy * dy < (mt.r + 26) ** 2) {
+        mt.got = true;
+        audio.blip();
+        if (this._addProgress(this.moteBoost)) break;
+      }
     }
     this.motes = this.motes.filter((mt) => mt.y < VH + 40 && !mt.got);
   }
@@ -270,7 +295,7 @@ export class Race {
   _hit(h) {
     h.dead = true;
     this.invuln = 1.3;
-    this.progress = Math.max(0, this.progress - 0.2);
+    this.progress = Math.max(0, this.progress - this.setback);
     this.hazards.forEach((x) => { if (Math.abs(x.y - 980) < 240) x.dead = true; });
     this.walls.forEach((x) => { if (Math.abs(x.y - 980) < 220) x.dead = true; });
     audio.error();
@@ -309,14 +334,18 @@ export class Race {
       ctx.fillStyle = `rgba(122, 90, 255, ${0.58 + glow * 0.18})`;
       ctx.fillRect(0, w.y, gapLeft, w.h);
       ctx.fillRect(gapRight, w.y, VW - gapRight, w.h);
-      ctx.strokeStyle = `rgba(0, 255, 204, ${0.45 + glow * 0.25})`;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(gapLeft, w.y);
-      ctx.lineTo(gapLeft, w.y + w.h);
-      ctx.moveTo(gapRight, w.y);
-      ctx.lineTo(gapRight, w.y + w.h);
-      ctx.stroke();
+      const drawEdge = (x, color, width = 4) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.beginPath();
+        ctx.moveTo(x, w.y);
+        ctx.lineTo(x, w.y + w.h);
+        ctx.stroke();
+      };
+      const boostColor = w.boosted ? `rgba(180, 255, 245, ${0.45 + glow * 0.18})` : `rgba(128, 255, 72, ${0.7 + glow * 0.25})`;
+      const normalColor = `rgba(0, 255, 204, ${0.45 + glow * 0.25})`;
+      drawEdge(gapLeft, w.boostEdge === "left" ? boostColor : normalColor, w.boostEdge === "left" ? 7 : 4);
+      drawEdge(gapRight, w.boostEdge === "right" ? boostColor : normalColor, w.boostEdge === "right" ? 7 : 4);
       ctx.restore();
       ctx.shadowBlur = 0;
     }
