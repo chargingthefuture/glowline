@@ -101,6 +101,28 @@ export const STORY = [
       gaps: [320, 520, 410, 210, 165, 455, 555, 340, 185, 270, 505, 395, 225, 360],
     },
   } },
+  { say: [
+    "The Pulse: Some rails carry you faster. The green edge is the current.",
+    "Broker: Touch the wrong wall and the route pushes back.",
+  ] },
+  { race: {
+    name: "Act 7 — Rail Run",
+    subtitle: "Skim green rails, avoid blocked walls",
+    seconds: 30,
+    mode: "maze",
+    setback: 0.045,
+    moteBoost: 0.035,
+    maze: {
+      gap: 235,
+      wallHeight: 72,
+      interval: 1.08,
+      spawnUntil: 0.9,
+      boostAmount: 0.07,
+      boostRange: 42,
+      gaps: [180, 255, 360, 490, 550, 455, 335, 220, 165, 270, 420, 540, 470, 320, 205, 360],
+      boostEdges: ["left", "left", "right", "right", "right", "left", "left", "left", "right", "right", "right", "left", "left", "right", "right", "left"],
+    },
+  } },
   { say: (branch) => branch === "broker"
       ? ["GL-1N3 delivers the patch, and Broker steadies.",
          "Broker (rebooting): GL-1N3...? What happened?",
