@@ -161,6 +161,7 @@ export class Race {
     this.wallIndex = 0;
     this.invuln = 0;
     this.setback = cfg.setback ?? 0.2;
+    this.moteBoost = cfg.moteBoost ?? 0.03;
     this.done = false;
     this._resolve = null;
     this.maze = cfg.maze ? {
@@ -264,7 +265,13 @@ export class Race {
     for (const mt of this.motes) {
       mt.y += (this.m.fall * 0.7) * dt;
       const dx = mt.x - this.ship.x, dy = mt.y - SHIP_Y;
-      if (dx * dx + dy * dy < (mt.r + 26) ** 2) { mt.got = true; audio.blip(); }
+      if (dx * dx + dy * dy < (mt.r + 26) ** 2) {
+        mt.got = true;
+        this.progress = clamp(this.progress + this.moteBoost, 0, 1);
+        if (this.hooks.onProgress) this.hooks.onProgress(this.progress);
+        audio.blip();
+        if (this.progress >= 1) { this.done = true; this._resolve("win"); break; }
+      }
     }
     this.motes = this.motes.filter((mt) => mt.y < VH + 40 && !mt.got);
   }
