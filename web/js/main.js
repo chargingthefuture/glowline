@@ -183,14 +183,15 @@ async function runStory() {
   for (const beat of STORY) {
     if (beat.say) {
       const lines = typeof beat.say === "function" ? beat.say(branch) : beat.say;
-      await dlg.say(lines);
+      if (lines && lines.length) await dlg.say(lines); // a branch may skip a beat
     } else if (beat.choice) {
       const opt = await dlg.choose(beat.choice.prompt, beat.choice.options);
       branch = opt.branch;
       dlg.hideDialogue();
       if (opt.line) await dlg.say([opt.line]);
     } else if (beat.race) {
-      await runRace(beat.race);
+      const cfg = typeof beat.race === "function" ? beat.race(branch) : beat.race;
+      if (cfg) await runRace(cfg);
     }
   }
   showEnd(branch);
